@@ -34,48 +34,63 @@ $$\mathbf{G}_{remote\_accumulated} \mathrel{+}= \int (\nabla^{-1} \times \Delta 
 
 ---
 
-## ⚡ 3-Tier Virtualization Infrastructure Topology
+## ⚡  3-Tier Virtualization Infrastructure Topology & Compilation Guard
 
-CVA is structurally organized across three distinct, asymmetrical technology layers to achieve a seamless, zero-overhead execution plane:
+CVA (Compiler Virtualization Architecture) couples CPython Hooking, JAX/XLA SPMD compilation, and Bare-metal CUDA PTX in a 3-tier system for 0-overhead execution, validated by an HLO static analysis firewall.
 
 ```mermaid
 graph TD
-    %% 스타일 및 가독성 최적화 설정
+    %% Style and Readability Optimization Settings
     classDef t1 fill:#2e1065,stroke:#a855f7,stroke-width:2px,color:#f3e8ff,font-size:15px,font-weight:bold;
     classDef t2 fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#f8fafc,font-size:15px,font-weight:bold;
     classDef t3 fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ecfdf5,font-size:15px,font-weight:bold;
     classDef desc fill:#1e1b4b,stroke:#4338ca,stroke-width:1px,color:#e0e7ff,font-size:13px;
+    classDef guard fill:#7f1d1d,stroke:#ef4444,stroke-width:2px,color:#fef2f2,font-size:14px,font-weight:bold;
 
     %% Tier 1: CPython VM Hijacking Layer
     subgraph T1 [Tier 1: CPython VM Hijacking Layer]
-        Node_T1["<b>[Target]</b><br>Dynamically intercepts PyTorch Autograd timelines"]
-        Hook_T1["<b>[Mechanism]</b><br>types.MethodType forward hooks"]
+        Node_T1["`**[Target]**
+        Dynamically intercepts PyTorch Autograd timelines`"]
+        Hook_T1["`**[Mechanism]**
+        types.MethodType forward hooks`"]
         Node_T1 === Hook_T1
     end
 
     %% Tier 2: JAX/XLA SPMD Compilation Layer
     subgraph T2 [Tier 2: JAX/XLA SPMD Compilation Layer]
-        Node_T2["<b>[Target]</b><br>Pre-compiled powers-of-2 bucket registries"]
-        Map_T2["<b>[Isolation]</b><br>shard_map"]
-        Idx_T2["<b>[Config]</b><br>unique_indices=False"]
+        Node_T2["`**[Target]**
+        Pre-compiled powers-of-2 bucket registries`"]
+        Map_T2["`**[Isolation]**
+        shard_map`"]
+        Idx_T2["`**[Config]**
+        unique_indices=False`"]
         Node_T2 === Map_T2
         Node_T2 === Idx_T2
     end
 
     %% Tier 3: Bare-Metal CUDA/PTX Machine Layer
     subgraph T3 [Tier 3: Bare-Metal CUDA/PTX Machine Layer]
-        Node_T3["<b>[Execution]</b><br>Driving atomicAdd hardware"]
-        Warp_T3["<b>[Operation]</b><br>Branchless warp-level __ballot_sync"]
-        Ptx_T3["<b>[Instruction]</b><br>Inline PTX assembly selp.b32"]
+        Node_T3["`**[Execution]**
+        Driving atomicAdd hardware`"]
+        Warp_T3["`**[Operation]**
+        Branchless warp-level __ballot_sync`"]
+        Ptx_T3["`**[Instruction]**
+        Inline PTX assembly selp.b32`"]
         Node_T3 === Warp_T3
         Node_T3 === Ptx_T3
     end
 
-    %% 레이어 간 직관적인 실행 흐름 연결
+    %% Static Audit Guard Firewall
+    Guard_HLO["`**[Static Audit Firewall]**
+    benchmark_cva_hlo_audit.py
+    Enforces 0-Count NCCL Collective Barriers`"]
+
+    %% Intuitive Execution Flow Connections Between Layers
     T1 ==>|VM Interception| T2
     T2 ==>|Hardware Compilation| T3
+    Guard_HLO -.->|Pre-Flight Bytecode Scan| T2
 
-    %% 클래스 지정
+    %% Class Assignments
     class T1,Node_T1 t1;
     class Hook_T1 desc;
     
@@ -84,13 +99,19 @@ graph TD
     
     class T3,Node_T3 t3;
     class Warp_T3,Ptx_T3 desc;
+    class Guard_HLO guard;
+
 
 
 ```
 
-1. **Tier 1 (CPython VM Hijacking Layer)**: Completely hijacks the original model layer forward methods (e.g., Hugging Face Transformers) with zero code modifications using runtime hook injection factories.
-2. **Tier 2 (JAX/XLA SPMD Compilation Layer)**: Pre-warms and captures XLA-optimized algebraic execution graphs into native machine code. Uses `shard_map` to manage macro-topologies and isolates JIT compiler re-tracing stalls via static power-of-2 buckets.
-3. **Tier 3 (Bare-Metal CUDA/PTX Machine Layer)**: Eliminates hardware branch prediction stalls using inline PTX assembly (`selp.b32`) and forces bare-metal atomic hardware instructions (`atomicAdd`) for 0-leak, deterministic gradient reconstruction.
+### Architectural Core Pillars
+
+*   **Tier 1 (CPython VM Hijacking)**: Intercepts standard model layers (e.g., Hugging Face) natively with **zero-code changes** via dynamic runtime hooks using `types.MethodType`.
+*   **Tier 2 (JAX/XLA SPMD Compilation)**: Manages the macro-topology by pre-compiling XLA-optimized HLO graphs, completely bypassing JIT re-tracing delays through `shard_map` isolation.
+*   **Tier 3 (Bare-Metal CUDA/PTX)**: Executes 0-leak gradient reconstructions directly on hardware using `selp.b32` inline PTX assembly and hardware-level atomic operations (`atomicAdd`).
+*   **Static Assembly Compiler Audit Guard**: Scans pre-compiled HLO IR code using `benchmark_cva_hlo_audit.py` to completely eliminate multi-node collective barriers (such as `AllReduce`).
+
 
 ---
 
