@@ -1,7 +1,7 @@
 # ====================================================================
 # [COMPRESSIBLE-VORTICITY-AUTOGRAD HARDWARE INSERTER - V1.0]          #
 # @file: test_cluster_e2e_cva.py                                      #
-# [PART 3/3]: Multi-Node Dynamic Scenario Simulation Run & Telemetry  #
+# Multi-Node Dynamic Scenario Simulation Run & Telemetry  #
 # ====================================================================
 
 import torch
